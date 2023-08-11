@@ -1,0 +1,13 @@
+{
+  "result": "deny",
+  "reason": {
+    "applied_allows": [
+      {"name": "A-MR1", "msg": "adam.sandor is allowed to read movies/124442 because part of movie-readers group"}
+    ],
+    "applied_denies": [
+      {"name": "D-MR2", "msg": "adam.sandor is not allowed to read movies/124442"}
+    ],
+    "resolution_strategy": "default-deny",
+    "overrule": true
+  }
+}

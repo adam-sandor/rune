@@ -1,0 +1,9 @@
+{
+  "resource": "movies/124442",
+  "action": "read",
+  "subject": {
+    "username": "adam.sandor",
+    "fullname": "Adam Sandor",
+    "groups": ["movie-readers", "lion-tamers"]
+  }
+}

@@ -1,0 +1,1 @@
+opa eval data.rune.results --bundle ./ -i example/input.json
