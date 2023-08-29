@@ -1,0 +1,12 @@
+{
+  "rune": {
+    "policy_bundle": {
+      "name": "movies-and-actors",
+      "packages": [
+        "example.actors",
+        "example.movies"
+      ],
+      "resolution_strategy": "default-allow"
+    }
+  }
+}

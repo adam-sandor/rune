@@ -1,10 +1,12 @@
 package rune
 
 import future.keywords.in
+import data.example.movies as rs
 
 results["result"] := result
 results["reason"] := reason
 results["result_validation_errors"] := result_validation_errors
+results["rule_set"] := rs.rule_set
 
 result := "allow" {
     allow
@@ -72,12 +74,6 @@ allow {
 
 reason["resolution_strategy"] := rs.rule_set.resolution_strategy
 
-reason["enforced_allows"] := enforced_allow {
-    #only list applied allows if the overall result is allow
-    allow
-}
+reason["enforced_allows"] := enforced_allow
 
-reason["enforced_denies"] := enforced_deny {
-    #only list applied denies if the overall result is deny
-    not allow
-}
+reason["enforced_denies"] := enforced_deny
