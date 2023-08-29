@@ -4,6 +4,8 @@ An opinionated framework designed to help build maintanable and well-structured 
 
 It implements the following design patterns & functionality:
 
+* Don't interfere with the user's ability to structure code into packages
+* Packages become **rule sets** with metadata and strategies to combine results from different rule sets
 * Make evaluation strategies like "Allow by default or Deny by default" configurable without having to
 restructure the code.
 * Enforce naming rules for better auditing and debugging.
@@ -13,8 +15,16 @@ restructure the code.
 
 ## Your code and Rune
 
+### Rule sets
+
+```text
+bundle -> deny
+\_ rule_set[example.movies] -> allow 
+\_ rule_set[example.actors] -> deny
+```
+
 Rune expects your Rego to be structured in a certain way (design patterns) to provide functionality. You as the
-user win in two ways - you're code will be using best practices and you get a bunch of useful stuff out of the
+user win in two ways - you're code will be using best practices, and you get a bunch of useful stuff out of the
 box.
 
 Here is a Rego rule in Rune format. The type of the rule (set of objects named `allow` or `deny`) 

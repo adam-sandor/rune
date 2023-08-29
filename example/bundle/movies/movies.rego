@@ -1,8 +1,8 @@
-package example.movies
+package policy.movies
 
 import future.keywords.in
 
-rule_set := {
+metadata := {
 	"name": "Access to Movies",
 	"description": "Grant access to movies for movie-readers",
 	"resolution_strategy": "default-deny-overrule",

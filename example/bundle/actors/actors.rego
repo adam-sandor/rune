@@ -1,15 +1,15 @@
-package example.actors
+package policy.actors
 
 import future.keywords.in
 
-rule_set := {
+metadata := {
 	"name": "Access to Actors",
 	"description": "Deny access to actors for users who are not fan of the actor",
 	"resolution_strategy": "default-allow"
 }
 
 deny[result] {
-    not input.subject in data.actors[input.resource].fans
+    not input.subject in data.actor_data[input.resource].fans
 
     result := {
         "name": "D-ACT1",

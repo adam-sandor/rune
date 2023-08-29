@@ -2,9 +2,9 @@
   "rune": {
     "policy_bundle": {
       "name": "movies-and-actors",
-      "packages": [
-        "example.actors",
-        "example.movies"
+      "rule_sets": [
+        "actors",
+        "movies"
       ],
       "resolution_strategy": "default-allow"
     }
