@@ -10,8 +10,8 @@ results[rs_id] := r {
     r := {
         "rule_set": rule_set.metadata.name,
         "result": result[rs_id],
-        "reason": reason[rs_id]
-        #"result_validation_errors": result_validation_errors[rule_set]
+        "reason": reason[rs_id],
+        "result_validation_errors": result_validation_errors[rs_id]
     }
 }
 
@@ -19,18 +19,18 @@ result[rs_id] := "allow" {
     rs_id := rule_sets[_]
     rule_set := data.policy[rs_id]
     allow[rule_set]
-    #count(result_validation_errors) == 0
+    count(result_validation_errors[rs_id]) == 0
 }
 
 result[rs_id] := "deny" {
     rs_id := rule_sets[_]
     rule_set := data.policy[rs_id]
     not allow[rule_set]
-    #count(result_validation_errors) == 0
+    count(result_validation_errors[rs_id]) == 0
 }
-#result := "error" {
-#    count(result_validation_errors) > 0
-#}
+result := "error" {
+    count(result_validation_errors[rs_id]) > 0
+}
 
 enforced_allow[rs_id] := rule_results {
     rs_id := rule_sets[_]
@@ -47,20 +47,20 @@ enforced_deny[rs_id] := rule_results {
         enforce == "enforce" }
 }
 
-#result_validation_errors["Rule with missing name"] {
-#    rule_results := rs.allow | rs.deny
-#    result := rule_results[_]
-#    keys := object.keys(result)
-#    not "name" in keys
-#}
-
-#result_validation_errors[error] {
-#    rule_results := rs.allow | rs.deny
-#    result := rule_results[_]
-#    enforce := object.get(result, "enforce", "enforce")
-#    not enforce in {"enforce", "ignore", "monitor"}
-#    error := sprintf("Invalid value for enforce property of rule %s: %s", [result.name, result.enforce])
-#}
+result_validation_errors[rs_id] := errors {
+    rs_id := rule_sets[_]
+    rule_set := data.policy[rs_id]
+    rule_results := rule_set.allow | rule_set.deny
+    result := rule_results[_]
+    enforce_errors := { error |
+        error := sprintf("Invalid value for enforce property of rule %s: %s", [result.name, result.enforce]);
+             enforce := object.get(result, "enforce", "enforce");
+             not enforce in {"enforce", "ignore", "monitor"}}
+    missing_name_errors := { error | error := "Rule with missing name";
+                                keys := object.keys(result)
+                                not "name" in keys}
+    errors := enforce_errors | missing_name_errors
+}
 
 allow[rs_id] := true {
     rs_id := rule_sets[_]
