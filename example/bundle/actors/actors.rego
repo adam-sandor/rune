@@ -9,10 +9,10 @@ metadata := {
 }
 
 deny[result] {
-    not input.subject in data.actor_data[input.resource].fans
+    not input.subject.username in data.actor_data[input.resource].fans
 
     result := {
         "name": "D-ACT1",
-        "msg": sprintf("%s isn't a fan of actor %s", [input.subject, input.resource])
+        "msg": sprintf("%s isn't a fan of actor %s", [input.subject.username, input.resource])
     }
 }

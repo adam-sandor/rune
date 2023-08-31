@@ -4,11 +4,13 @@ import future.keywords.in
 
 rule_sets := data.rune.policy_bundle.rule_sets
 
+results["rule_sets"] := rule_sets
+
 results[rs_id] := r {
     rs_id := rule_sets[_]
     rule_set := data.policy[rs_id]
     r := {
-        "rule_set": rule_set.metadata.name,
+        "name": rule_set.metadata.name,
         "result": result[rs_id],
         "reason": reason[rs_id],
         "result_validation_errors": result_validation_errors[rs_id]
@@ -17,18 +19,16 @@ results[rs_id] := r {
 
 result[rs_id] := "allow" {
     rs_id := rule_sets[_]
-    rule_set := data.policy[rs_id]
-    allow[rule_set]
+    allow[rs_id]
     count(result_validation_errors[rs_id]) == 0
 }
-
 result[rs_id] := "deny" {
     rs_id := rule_sets[_]
-    rule_set := data.policy[rs_id]
-    not allow[rule_set]
+    not allow[rs_id]
     count(result_validation_errors[rs_id]) == 0
 }
-result := "error" {
+result[rs_id] := "error" {
+    rs_id := rule_sets[_]
     count(result_validation_errors[rs_id]) > 0
 }
 
@@ -50,15 +50,20 @@ enforced_deny[rs_id] := rule_results {
 result_validation_errors[rs_id] := errors {
     rs_id := rule_sets[_]
     rule_set := data.policy[rs_id]
-    rule_results := rule_set.allow | rule_set.deny
-    result := rule_results[_]
+    allow_results := { r | r := rule_set.allow[_] }
+    deny_results := { r | r := rule_set.deny[_] }
+    rule_results := allow_results | deny_results
+
     enforce_errors := { error |
+        result := rule_results[_];
         error := sprintf("Invalid value for enforce property of rule %s: %s", [result.name, result.enforce]);
-             enforce := object.get(result, "enforce", "enforce");
-             not enforce in {"enforce", "ignore", "monitor"}}
-    missing_name_errors := { error | error := "Rule with missing name";
-                                keys := object.keys(result)
-                                not "name" in keys}
+        enforce := object.get(result, "enforce", "enforce");
+        not enforce in {"enforce", "ignore", "monitor"} }
+    missing_name_errors := { error |
+        result := rule_results[_];
+        error := "Rule with missing name";
+        keys := object.keys(result)
+        not "name" in keys }
     errors := enforce_errors | missing_name_errors
 }
 
@@ -67,8 +72,8 @@ allow[rs_id] := true {
     rule_set := data.policy[rs_id]
     rule_set.metadata.resolution_strategy == "default-deny-overrule"
 
-    count(enforced_allow[rule_set]) > 0
-    count(enforced_deny[rule_set]) == 0
+    count(enforced_allow[rs_id]) > 0
+    count(enforced_deny[rs_id]) == 0
 }
 
 allow[rs_id] := true {
@@ -76,8 +81,8 @@ allow[rs_id] := true {
     rule_set := data.policy[rs_id]
     rule_set.metadata.resolution_strategy == "default-allow-overrule"
 
-    count(enforced_deny[rule_set]) == 0
-    count(enforced_allow[rule_set]) == 0
+    count(enforced_deny[rs_id]) == 0
+    count(enforced_allow[rs_id]) == 0
 }
 
 allow[rs_id] := true {
@@ -85,7 +90,7 @@ allow[rs_id] := true {
     rule_set := data.policy[rs_id]
     rule_set.metadata.resolution_strategy == "default-deny"
 
-    count(enforced_allow[rule_set]) > 0
+    count(enforced_allow[rs_id]) > 0
 }
 
 allow[rs_id] := true {
@@ -93,7 +98,7 @@ allow[rs_id] := true {
     rule_set := data.policy[rs_id]
     rule_set.metadata.resolution_strategy == "default-allow"
 
-    count(enforced_deny[rule_set]) == 0
+    count(enforced_deny[rs_id]) == 0
 }
 
 reason[rs_id] := r {
