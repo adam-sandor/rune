@@ -54,17 +54,12 @@ result_validation_errors[rs_id] := errors {
     deny_results := { r | r := rule_set.deny[_] }
     rule_results := allow_results | deny_results
 
-    enforce_errors := { error |
-        result := rule_results[_];
-        error := sprintf("Invalid value for enforce property of rule %s: %s", [result.name, result.enforce]);
-        enforce := object.get(result, "enforce", "enforce");
-        not enforce in {"enforce", "ignore", "monitor"} }
-    missing_name_errors := { error |
+    missing_id_errors := { error |
         result := rule_results[_];
         error := "Rule with missing name";
         keys := object.keys(result)
-        not "name" in keys }
-    errors := enforce_errors | missing_name_errors
+        not "id" in keys }
+    errors := missing_id_errors
 }
 
 allow[rs_id] := true {

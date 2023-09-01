@@ -1,54 +1,44 @@
 # ᛤ Rune Framework for Rego ᛤ
 
-An opinionated framework designed to help build maintanable and well-structured Rego code.
+An opinionated framework designed to help build maintainable and well-structured Rego code. It enforces best practices
+and provides some nice services to the user who follows them.
 
-It implements the following design patterns & functionality:
+## What are these opinions / best practices?
 
-* Don't interfere with the user's ability to structure code into packages
-* Packages become **rule sets** with metadata and strategies to combine results from different rule sets
-* Make evaluation strategies like "Allow by default or Deny by default" configurable without having to
-restructure the code.
-* Enforce naming rules for better auditing and debugging.
-* Explain how an evaluation result was made using rule names and detail messages.
-* Rules can be temporarily turned off or put into monitoring state without significant code change.
-* Mixing of allow and deny rules with clear semantics for evaluation.
+1. There should be a straight-forward way to group rules into larger sets and combine their results in a flexible way.
+2. Combining rule outcomes should be based on well-defined configurable strategies rather than custom code.
+3. Top level rules should be called `allow` and `deny` with results that can be combined intuitively.
+4. Rule results should be easy to match to the rule that produced them.
+5. Rule results should be objects to make them extensible.
+6. Outputs should explain the final allow/deny result.
+
+## Design guidelines for the framework
+
+* Don't interfere with the user's ability to structure code into packages.
+* Don't make the user do more work / write more code than without using the framework.
+* Provide mechanism for custom outputs for compatibility with external enforcement points like Envoy or Kubernetes.
 
 ## Your code and Rune
 
 ### Rule sets
 
+Rule Sets provide a clear way to structure your Rego code. They are Rego packages with some metadata and a rule
+naming scheme.
+
+```text
+Note: Rune currently only supports Rule Sets that are sub-packages of the `policy` package.
+```
+
+Each Rule Set produces it's own allow or deny result. These can be combined into an overall result 
+(see Rule result combining).
+
 ```text
 bundle -> deny
-\_ rule_set[example.movies] -> allow 
-\_ rule_set[example.actors] -> deny
+\_ rule_set[policy.movies] -> allow 
+\_ rule_set[policy.actors] -> deny
 ```
 
-Rune expects your Rego to be structured in a certain way (design patterns) to provide functionality. You as the
-user win in two ways - you're code will be using best practices, and you get a bunch of useful stuff out of the
-box.
-
-Here is a Rego rule in Rune format. The type of the rule (set of objects named `allow` or `deny`) 
-is predefined as well as the result, which is an object that has 3 properties (only `enforce` is optional).
-Your code is expected to be a series of such `allow` and `deny` rules in different packages.
-```rego
-allow[result] {
-
-    "movie-readers" in input.subject.groups
-    regex.match("movies/\\d+", input.resource)
-    input.action == "read"
-
-    result := {
-    	"name": "A-MR1",
-        "msg": sprintf("%s is allowed to read %s because part of movie-readers group",
-        	[input.subject.username, input.resource]),
-        "enforce": "ignore"
-    }
-}
-```
-
-## Rune's semantics
-
-Rune expects an object called `rule_set` to be defined in the same package that provides the configuration.
+To provide the Rule Set's metadata Rune expects an object called `rule_set` to be defined in the package.
 This provides configurable strategy for evaluating the sets of `allow` and `deny` results.
 ```rego
 rule_set := {
@@ -57,9 +47,29 @@ rule_set := {
 }
 ```
 
-`name`: The name of the rule set. Optional as package name is used by default.
+Here is a Rego rule in Rune format. The name of the rule (allow / deny) and it's result type (set of objects) 
+is predefined. Each result object has a minimum of 2 properties (id and msg).
+Your code is expected to be a series of such `allow` and `deny` rules one or more Rule Sets.
+```rego
+allow[result] {
 
-`resultion_strategy`: 
+    "movie-readers" in input.subject.groups
+    regex.match("movies/\\d+", input.resource)
+    input.action == "read"
+
+    result := {
+    	"id": "A-MR1",
+        "msg": sprintf("%s is allowed to read %s because part of movie-readers group",
+        	[input.subject.username, input.resource])
+    }
+}
+```
+
+## Rule result combination
+
+The resolution strategy configuration in the Rule Set's metadata controls how the results of allow and deny rules combine
+into a final result. Currently, Rune supports the following strategies:
+
 * `default-allow`: The final result is `allow` unless at least one `deny` rule evaluates to true
 * `default-deny`: The final result is `deny` unless at least one `allow` rule evaluates to true
 * `default-allow-overrule`: The final result is `allow` if a no `deny` rule is triggered or if an `allow` rule is 
@@ -76,27 +86,6 @@ a user with a `suspicious_activity=true` attribute can't access the endpoint eve
 This can be implemented using a `default-deny-overrule` strategy, an `allow` rule for the group check 
 and a `deny` rule for the suspicious activity check. The user will be denied if the `allow` rule doesn't 
 fire or if the `deny` rule does.
-
-#### Rules 
-
-Each rule has to be a set rule adding an object either the `allow` or `deny` sets in the package. The rule
-result object has to have a `name`, a `msg` and an optional `enforce` property:
-
-```rego
-deny[result] {
-	input.subject.username == "adam.sandor"
-    input.action == "read"
-    input.resource == "movies/124442"
-
-    result := {
-    	"name": "D-MR2",
-        "msg": "adam.sandor is not allowed to read movies/124442",
-        "enforce": "ignore"
-    }
-}
-```
-
-#### 
 
 ## Execution
 

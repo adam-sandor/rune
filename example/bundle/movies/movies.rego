@@ -14,7 +14,7 @@ allow[result] {
     input.action == "read"
 
     result := {
-    	"name": "A-MR1",
+    	"id": "A-MR1",
         "msg": sprintf("%s is allowed to read %s because part of movie-readers group",
         	[input.subject.username, input.resource]),
     }
@@ -27,7 +27,7 @@ deny[result] {
     input.resource == "movies/124442"
 
     result := {
-    	"name": "D-MR2",
+    	"id": "D-MR2",
         "msg": "adam.sandor is not allowed to read movies/124442",
         "enforce": "enforce"
     }
