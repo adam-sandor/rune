@@ -1,5 +1,7 @@
 {
-  "resource": "movies/124442",
+  "resources": {
+    "movie": "movies/124442"
+  },
   "action": "read",
   "subject": {
     "username": "adam.sandor",

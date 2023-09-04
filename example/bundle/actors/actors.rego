@@ -5,14 +5,16 @@ import future.keywords.in
 metadata := {
 	"name": "Access to Actors",
 	"description": "Deny access to actors for users who are not fan of the actor",
-	"resolution_strategy": "default-allow"
+	"resolution_strategy": "default-deny"
 }
 
-deny[result] {
-    not input.subject.username in data.actor_data[input.resource].fans
+allow[result] {
+    "actor-editors" in input.subject.groups
+    regex.match("actors/\\d+", input.resources.actor)
+    input.action in {"add", "remove"}
 
     result := {
-        "id": "D-ACT1",
-        "msg": sprintf("%s isn't a fan of actor %s", [input.subject.username, input.resource])
+        "id": "A-ACT1",
+        "msg": sprintf("%s can add and remove actors from movies", [input.subject.username])
     }
 }

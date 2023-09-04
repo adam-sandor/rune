@@ -1,0 +1,12 @@
+{
+  "resources": {
+    "movie": "movies/224333",
+    "actor": "actors/338"
+  },
+  "action": "add",
+  "subject": {
+    "username": "adam.sandor",
+    "fullname": "Adam Sandor",
+    "groups": ["movie-readers", "lion-tamers", "movie-editors", "actor-editors"]
+  }
+}
