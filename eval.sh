@@ -4,4 +4,4 @@ if [ -z "$1" ]; then
 fi
 
 cp framework/rune.rego example/bundle
-opa eval data.rune.results --bundle ./example/bundle -i example/$1 -f pretty
+opa eval data.rune.results --bundle ./example/bundle -i $1 -f pretty
