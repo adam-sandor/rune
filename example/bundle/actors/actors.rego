@@ -4,7 +4,7 @@ import future.keywords.in
 
 metadata := {
 	"name": "Access to Actors",
-	"description": "Deny access to actors for users who are not fan of the actor",
+	"description": "Deny access to actors for users who are not fans of the actor",
 	"resolution_strategy": "default-deny"
 }
 
