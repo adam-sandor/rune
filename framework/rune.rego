@@ -4,9 +4,7 @@ import future.keywords.in
 
 rule_sets := data.rune.policy_bundle.rule_sets
 
-results["rule_sets"] := rule_sets
-
-results[rs_id] := r {
+results["rule_sets"][rs_id] := r {
     rs_id := rule_sets[_]
     rule_set := data.policy[rs_id]
     r := {
@@ -28,13 +26,13 @@ results["result"] := "deny" {
 
 final_allow := true {
     data.rune.policy_bundle.resolution_strategy == "default-deny"
-    allows := { rs_id | rs_id := rule_sets[_]; results[rs_id].result == "allow" }
+    allows := { rs_id | rs_id := rule_sets[_]; results["rule_sets"][rs_id].result == "allow" }
     count(allows) > 0
 }
 
 final_allow := true {
     data.rune.policy_bundle.resolution_strategy == "default-allow"
-    denies := { rs_id | rs_id := rule_sets[_]; results[rs_id].result == "deny" }   
+    denies := { rs_id | rs_id := rule_sets[_]; results["rule_sets"][rs_id].result == "deny" }   
     count(denies) == 0
 }
 
