@@ -6,7 +6,7 @@
         "actors",
         "movies"
       ],
-      "resolution_strategy": "default-allow"
+      "resolution_strategy": "default-deny"
     }
   }
 }
