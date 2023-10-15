@@ -1,7 +1,7 @@
-package rune
+package rune_test
 
 test_single_rule_set_default_allow_strategy_deny_result {
-	r := results with input as {
+	r := data.rune.results with input as {
 		"resources": {"movie": "movies/124442"},
 		"action": "read",
 		"subject": {
@@ -21,7 +21,7 @@ test_single_rule_set_default_allow_strategy_deny_result {
 }
 
 test_multiple_rule_set_default_allow_strategy_allow_result {
-	r := results with input as {
+	r := data.rune.results with input as {
 		"resources": {
 			"movie": "movies/224333",
 			"actor": "actors/338",

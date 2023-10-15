@@ -1,4 +1,4 @@
 .idea
 *.iml
 **/bundle/rune.rego
-**/bundle/rune_tests.rego
+**/bundle/rune_test.rego
