@@ -1,7 +1,11 @@
 # ᛤ Rune Framework for Rego ᛤ
 
-An opinionated framework designed to help build maintainable and well-structured Rego code. It enforces best practices
-and provides some nice services to the user who follows them.
+An opinionated framework designed to help build maintainable and well-structured Rego code.
+It acts as the entry point to all your rules and provides the following features:
+* Translating rule results into well-structured output
+* Output contains explanation of how it was calculated
+* Mechanism for mixing allow and deny rules using strategies
+* Grouping rules into rule sets that can be combined for a top-level result
 
 ## What are these opinions / best practices?
 
@@ -18,7 +22,28 @@ and provides some nice services to the user who follows them.
 * Don't make the user do more work / write more code than without using the framework.
 * Provide mechanism for custom outputs for compatibility with external enforcement points like Envoy or Kubernetes.
 
-## Your code and Rune
+## Running a rules with Rune
+
+### Rules
+
+Here is a Rego rule in Rune format. The name of the rule (allow / deny) and it's result type (set of objects) 
+is predefined. Each result object has a minimum of 2 properties (id and msg).
+Your code is expected to be a series of such `allow` and `deny` rules one or more Rule Sets.
+
+```rego
+allow[result] {
+
+    "movie-readers" in input.subject.groups
+    regex.match("movies/\\d+", input.resource)
+    input.action == "read"
+
+    result := {
+    	"id": "A-MR1",
+        "msg": sprintf("%s is allowed to read %s because part of movie-readers group",
+        	[input.subject.username, input.resource])
+    }
+}
+```
 
 ### Rule sets
 
@@ -47,24 +72,6 @@ rule_set := {
 }
 ```
 
-Here is a Rego rule in Rune format. The name of the rule (allow / deny) and it's result type (set of objects) 
-is predefined. Each result object has a minimum of 2 properties (id and msg).
-Your code is expected to be a series of such `allow` and `deny` rules one or more Rule Sets.
-```rego
-allow[result] {
-
-    "movie-readers" in input.subject.groups
-    regex.match("movies/\\d+", input.resource)
-    input.action == "read"
-
-    result := {
-    	"id": "A-MR1",
-        "msg": sprintf("%s is allowed to read %s because part of movie-readers group",
-        	[input.subject.username, input.resource])
-    }
-}
-```
-
 ## Rule result combination
 
 The resolution strategy configuration in the Rule Set's metadata controls how the results of allow and deny rules combine
@@ -89,28 +96,65 @@ fire or if the `deny` rule does.
 
 ## Execution
 
-Rune provides the entrypoint rule, so it can take over the evaluation process. Clients should invoke the
-`rune.results` rule:
+Rune provides the entrypoint rule, so it can take over the evaluation process. `rune.rego` must be packaged into
+the bundle that get's deployed in OPA. Clients should invoke the `rune.results` rule:
+
+Note: In this repo you can run the example movies/actors rule set using the `eval.sh` script and providing it with an
+input file path (e.g. example/input-add-actor-to-movie.json). `eval.sh` will copy rune.rego into the example/bundle
+folder
+
 ```shell
-opa eval data.rune.results --bundle ./ -i example/input.json
+opa eval data.rune.results --bundle ./example/bundle -i example/input-add-actor-to-movie.json
 ```
 
 The results from Rune look like this:
 ```json
 {
-  "result": "deny",
-  "reason": {
-    "applied_allows": [
-      {"name": "A-MR1", "msg": "adam.sandor is allowed to read movies/124442 because part of movie-readers group"}
-    ],
-    "applied_denies": [
-      {"name": "D-MR2", "msg": "adam.sandor is not allowed to read movies/124442"}
-    ],
-    "resolution_strategy": "default-deny",
-    "overrule": true
+  "resolution_strategy": "default-deny",
+  "result": "allow",
+  "rule_sets": {
+    "actors": {
+      "name": "Access to Actors",
+      "reason": {
+        "enforced_allows": [
+          {
+            "id": "A-ACT1",
+            "msg": "adam.sandor can add and remove actors from movies"
+          }
+        ],
+        "enforced_denies": [],
+        "resolution_strategy": "default-deny"
+      },
+      "result": "allow",
+      "result_validation_errors": []
+    },
+    "movies": {
+      "name": "Access to Movies",
+      "reason": {
+        "enforced_allows": [
+          {
+            "id": "A-E-MR3",
+            "msg": "adam.sandor is allowed to edit movies/224333 because part of movie-editors group"
+          }
+        ],
+        "enforced_denies": [],
+        "resolution_strategy": "default-deny-overrule"
+      },
+      "result": "allow",
+      "result_validation_errors": []
+    }
   }
 }
 ```
+
+## Sample rule bundle
+
+The example folder contains a rule bundle that showcases Rune's functionality. There are two rule sets: actors and movies. 
+These will combine into an overall rule result that will produce output similar to what's showin in the previous section.
+
+Try running: `./eval.sh example/input-add-actor-to-movie.json` to see the results, and play around the input and the sample
+rules!
+
 
 ## Future functionality
 
@@ -128,3 +172,5 @@ rune --version=0.1.1 bundle ./
 ```
 
 ### Custom Resolution Strategies
+
+Provide an extension point for users to define their own resolution strategies in the the form of a function.
