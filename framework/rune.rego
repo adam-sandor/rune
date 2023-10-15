@@ -16,6 +16,27 @@ results[rs_id] := r {
         "result_validation_errors": result_validation_errors[rs_id]
     }
 }
+results["resolution_strategy"] := data.rune.policy_bundle.resolution_strategy
+
+results["result"] := "allow" {
+    final_allow
+}
+
+results["result"] := "deny" {
+    not final_allow
+}
+
+final_allow := true {
+    data.rune.policy_bundle.resolution_strategy == "default-deny"
+    allows := { rs_id | rs_id := rule_sets[_]; results[rs_id].result == "allow" }
+    count(allows) > 0
+}
+
+final_allow := true {
+    data.rune.policy_bundle.resolution_strategy == "default-allow"
+    denies := { rs_id | rs_id := rule_sets[_]; results[rs_id].result == "deny" }   
+    count(denies) == 0
+}
 
 result[rs_id] := "allow" {
     rs_id := rule_sets[_]
