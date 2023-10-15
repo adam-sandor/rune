@@ -12,12 +12,12 @@ test_single_rule_set_default_allow_strategy_deny_result {
 	}
 		with data.rune.policy_bundle as {
 			"name": "movies",
-			"rule_sets": ["movies"],
+			"rule_sets": ["movies", "actors"],
 			"resolution_strategy": "default-allow",
 		}
 
-    r.result == "deny"
-    r.rule_sets.movies.result == "deny"
+	r.result == "deny"
+	r.rule_sets.movies.result == "deny"
 }
 
 test_multiple_rule_set_default_allow_strategy_allow_result {
@@ -42,8 +42,7 @@ test_multiple_rule_set_default_allow_strategy_allow_result {
 			"resolution_strategy": "default-allow",
 		}
 
-    print(r)
-    r.result == "allow"
-    r.rule_sets.movies.result == "allow"
-    r.rule_sets.actors.result == "allow"
+	r.result == "allow"
+	r.rule_sets.movies.result == "allow"
+	r.rule_sets.actors.result == "allow"
 }
